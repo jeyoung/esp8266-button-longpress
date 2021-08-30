@@ -20,8 +20,8 @@ struct Board
     uint32_t button_timestamp;
 
     uint16_t button_down;
-    uint16_t button_up;
     uint16_t button_longpress;
+    uint16_t button_up;
 };
 
 static os_timer_t os_timer = {0};
@@ -39,8 +39,8 @@ static ICACHE_FLASH_ATTR void board_init(struct Board *board, uint32_t pin_butto
     board->button_timestamp = 0;
 
     board->button_down = 0;
-    board->button_up = 0;
     board->button_longpress = 0;
+    board->button_up = 0;
 
     GPIO_DIS_OUTPUT(board->pin_button);
 }
@@ -50,14 +50,14 @@ static ICACHE_FLASH_ATTR void board_read(struct Board *board)
     uint32_t now = system_get_time();
 
     board->button_bounces = (board->button_bounces << 1) | (uint16_t)GPIO_INPUT_GET(board->pin_button);
+    board->button_up = board->button_down && (board->button_bounces > 0xFF00);
+    board->button_longpress = board->button_down && now - board->button_timestamp > 3000000;
     board->button_down = board->button_bounces < 0xFF00;
     if (board->button_down) {
 	if (!board->button_timestamp)
 	    board->button_timestamp = now;
     } else
 	board->button_timestamp = 0;
-    board->button_longpress = board->button_down && now - board->button_timestamp > 3000000;
-    board->button_up = board->button_down && (board->button_bounces & 0x00FF);
 }
 
 static ICACHE_FLASH_ATTR void board_led(struct Board *board)
@@ -77,5 +77,5 @@ void ICACHE_FLASH_ATTR user_init(void)
 
     os_timer_disarm(&os_timer);
     os_timer_setfn(&os_timer, &main_on_timer, (void *)NULL);
-    os_timer_arm(&os_timer, 5, 1);
+    os_timer_arm(&os_timer, 1, 1);
 }
