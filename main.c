@@ -51,13 +51,13 @@ static ICACHE_FLASH_ATTR void board_read(struct Board *board)
 
     board->button_bounces = (board->button_bounces << 1) | (uint16_t)GPIO_INPUT_GET(board->pin_button);
     board->button_up = board->button_down && (board->button_bounces > 0xFF00);
-    board->button_longpress = board->button_down && now - board->button_timestamp > 3000000;
-    board->button_down = board->button_bounces < 0xFF00;
+    board->button_longpress = board->button_down && board->button_timestamp && (now - board->button_timestamp > 3000000);
     if (board->button_down) {
 	if (!board->button_timestamp)
 	    board->button_timestamp = now;
     } else
 	board->button_timestamp = 0;
+    board->button_down = board->button_bounces < 0xFF00;
 }
 
 static ICACHE_FLASH_ATTR void board_led(struct Board *board)
